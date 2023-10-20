@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        UID: $UID
+    container_name: the-grads-frontend
+    image: the-grads-frontend
+    command: make run-dev
+    volumes:
+      - .:/home/python/app
+    ports:
+      - "8050:8050"
+      
+networks:
+  default:
+    external: true
+    name: solar-plate-network
