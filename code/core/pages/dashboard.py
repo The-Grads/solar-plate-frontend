@@ -26,65 +26,46 @@ def description(user_id=None):
 
 def layout(user_id=None):
     solar_service = SolarPlateService()
-    data = solar_service.getData(user_id=user_id[1])
-    gen_1 = pd.read_csv("/home/python/app/code/content/Plant_1_Generation_Data.csv")
-    sens_1 = pd.read_csv(
-        "/home/python/app/code/content/Plant_1_Weather_Sensor_Data.csv"
-    )
+    data = solar_service.getData(user_id=str(user_id))
+    gen_1 = pd.DataFrame(data["solar_plates"][0]["power_data"])
     # format datetime
-    gen_1["DATE_TIME"] = pd.to_datetime(gen_1["DATE_TIME"], format="%d-%m-%Y %H:%M")
-    sens_1["DATE_TIME"] = pd.to_datetime(
-        sens_1["DATE_TIME"], format="%Y-%m-%d %H:%M:%S"
+    gen_1["event_date"] = pd.to_datetime(
+        gen_1["event_date"], format="%Y-%m-%dT%H:%M:%S.%f"
     )
 
+    gen_1["HOURS"] = gen_1["event_date"].dt.time
+
+    gen_1["DATE"] = gen_1["event_date"].dt.date
+    gen_1['DAILY_YIELD'] = gen_1['power_delivery_ac'] + gen_1['power_delivery_dc']
+
     chart1 = px.line(
-        data_frame=gen_1, x="DATE_TIME", y="DAILY_YIELD", title="Daily Yield"
+        data_frame=gen_1, x="event_date", y="DAILY_YIELD", title="Total por momento enviado"
     )
     chart1.update(layout=dict(title=dict(x=0.5)))
-    gen_1["HOURS"] = gen_1["DATE_TIME"].dt.time
+
     chart2 = px.scatter(
         data_frame=gen_1,
-        y=["AC_POWER", "DC_POWER"],
+        y=["power_delivery_ac", "power_delivery_dc"],
         x="HOURS",
         title="Daily Produced AC & DC Power",
     )
     chart2.update(layout=dict(title=dict(x=0.5)))
-    gen_1["DATE"] = gen_1["DATE_TIME"].dt.date
 
-    chart3 = px.line(gen_1, x="DATE", y="DAILY_YIELD", title="Daily Yield")
+    chart3 = px.line(gen_1, x="DATE", y="DAILY_YIELD", title="Total por dia")
     chart3.update(layout=dict(title=dict(x=0.5)))
-    chart4 = px.bar(gen_1, x="DATE", y="TOTAL_YIELD", title="Total Yield")
+    chart4 = px.bar(gen_1, x="DATE", y="DAILY_YIELD", title="Total Yield")
     chart4.update(layout=dict(title=dict(x=0.5)))
-    sens_1["HOURS"] = sens_1["DATE_TIME"].dt.time
 
-    chart5 = px.scatter(
-        sens_1, x="HOURS", y="IRRADIATION", title="Irradiation during day hours"
-    )
-    chart5.update(layout=dict(title=dict(x=0.5)))
-
-    chart6 = px.line(
-        sens_1,
-        x="DATE_TIME",
-        y=["AMBIENT_TEMPERATURE", "MODULE_TEMPERATURE"],
-        title="Ambient and Module Temperature",
-    )
-    chart6.update(layout=dict(title=dict(x=0.5)))
-
-    graph1 = dcc.Graph(id="graph1", figure=chart1, className="img")
+    graph1 = dcc.Graph(id="graph1", figure=chart1, className="img mt-4")
     graph2 = dcc.Graph(id="graph2", figure=chart2, className="rectangle")
     graph3 = dcc.Graph(id="graph3", figure=chart3, className="four columns")
     graph4 = dcc.Graph(id="graph4", figure=chart4, className="four columns")
-    graph5 = dcc.Graph(id="graph5", figure=chart5, className="rectangle-2")
-    graph6 = dcc.Graph(id="graph6", figure=chart6, className="four columns")
-    dropdown1 = dcc.Dropdown(id="mydropdown", options=sens_1["HOURS"].unique())
+    # graph5 = dcc.Graph(id="graph5", figure=chart5, className="rectangle-2")
+    # graph6 = dcc.Graph(id="graph6", figure=chart6, className="four columns")
+    # dropdown1 = dcc.Dropdown(id="mydropdown", options=sens_1["HOURS"].unique())
 
     # setup the header
     header = html.H2(children="Grads Teste")
-    # setup to rows, graph 1-3 in the first row, and graph4 in the second:
-    row1 = html.Div(children=[graph1, graph2], className="flex bg-gray-50")
-    row2 = html.Div(children=[graph3, graph4], className="flex bg-gray-50")
-
-    row3 = html.Div(children=[graph5, graph6], className="flex bg-gray-50")
 
     return html.Div(
         className="flex bg-gray-100 h-full",
@@ -145,9 +126,38 @@ def layout(user_id=None):
                     #     ],
                     #     className="bg-gray-50 shadow-xl",
                     # ),
-                    row1,
-                    row2,
-                    row3,
+                    html.Div(
+                        className="group",
+                        children=[graph2],
+                        style={
+                            "maxWidth": "1134px",
+                            "maxHeight": "677px",
+                        },
+                    ),
+                    html.Div(
+                        className="rectangle-wrapper",
+                        children=[graph1],
+                        style={
+                            "maxWidth": "1357px",
+                            "maxHeight": "677px",
+                        },
+                    ),
+                    # html.Div(
+                    #     className="img-wrapper",
+                    #     children=[graph3],
+                    #     style={
+                    #         "maxWidth": "1357px",
+                    #         "maxHeight": "517px",
+                    #     },
+                    # ),
+                    html.Div(
+                        className="img-wrapper",
+                        children=[graph4],
+                        style={
+                            "maxWidth": "1357px",
+                            "maxHeight": "517px",
+                        },
+                    ),
                 ],
                 className="w-full h-screen p-32",
             ),

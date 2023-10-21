@@ -4,7 +4,7 @@ from typing import Tuple, Dict
 
 class SolarPlateService:
     def getData(self, user_id: str) -> Dict:
-        url = f"{Config.API_URL}/core/user/{id}"
+        url = f"{Config.API_URL}/core/user/{user_id}"
     
         try:
             req = requests.get(url)
